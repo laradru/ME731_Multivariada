@@ -46,3 +46,23 @@ resultado <- cbind(ID, saida)
 resultado
 ordem<- order(resultado$Mahalanobis, decreasing = TRUE)
 resultado[ordem,]
+
+#### Biplot ########################################
+library(MVar.pt)
+crime.matrix
+crime.df <- as.data.frame(crime.matrix)
+Biplot(crime.df, linlab = crime$Regiao)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
