@@ -15,7 +15,7 @@ colnames(Tab) <- c("Municipio", "DM", "Prob", "DE")
 Tab
 
 #### FUNCTION: OUTLIER MULT ########################################
-#Determina as raizes das dm e de. Calcula também a prob de que a dm >= valor observado, admitindo normalidade multivariada e n grande:
+#Determina as raízes das dm e de. Calcula também a probabilidade de que a dm >= valor observado, admitindo normalidade multivariada e assumindo n grande:
 
 OutlierMult <-function(x){
   d <- dim(x)

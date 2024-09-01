@@ -34,7 +34,7 @@ round(cor.crime,2)
 library(corrplot)
 corrplot(cor.crime, method = "ellipse")
 
-#Faces de Chernoff (com data.frame - a ordem das variaveis importa: está relacionada as caracteristicas da face)
+#Faces de Chernoff (com data.frame - a ordem das variáveis importa: está relacionada as características da face)
 library(aplpack)
 crime1 <- crime[, 2:5]
 faces(crime1, labels = crime$Regiao)

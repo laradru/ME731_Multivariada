@@ -19,14 +19,14 @@ points(Med_X2~Med_X1, col="blue", pch=18, cex=2)
 plot(DD$Y2~DD$Y1, main="B", xlab="Y1", ylab="Y2")
 points(Med_Y2~Med_Y1, col="blue", pch=18, cex=2)
 #######Covariance Matrix########################################################
-MDDX<-as.matrix(cbind(DD$X1,DD$X2)) #matriz com colunas X1 e X2 somente
+MDDX<-as.matrix(cbind(DD$X1,DD$X2)) #matriz com colunas X1 e X2, somente
 colnames(MDDX) <- c("X1", "X2") #renomeando as colunas
-DDCovX<-cov(MDDX) #Matriz de variancias e covariancias entre X1 e X2
+DDCovX<-cov(MDDX) #Matriz de variâncias e covariâncias entre X1 e X2
 DDCovX
 round(DDCovX, 2)
 #######Total and Generalized Variances###########################################
 #total:
-sum(diag(DDCovX)) #traço da matriz de var-cov é a soma das diagonais da matriz (no caso, as variancias de X1, X2)
+sum(diag(DDCovX)) #traço da matriz de var-cov é a soma das diagonais da matriz (no caso, as variâncias de X1, X2)
 #generalized:
 det(DDCovX)
 #######Correlation Matrix#######################################################
