@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+/renv
+.DS_Store
+*.xlsx
