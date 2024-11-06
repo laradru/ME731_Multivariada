@@ -5,6 +5,7 @@ install.packages("tidyverse")
 install.packages("knitr")
 install.packages("GGally")
 install.packages("biotools")
+install.packages("mvoutlier")
 
 ##############################################################################################################
 # Rodando os pacotes
@@ -13,6 +14,8 @@ library(tidyverse)
 library(knitr)
 library(GGally)
 library(biotools)
+library(mvoutlier)
+
 ##############################################################################################################
 # Importação dos dados 
 ##############################################################################################################
@@ -24,6 +27,7 @@ psychology <- data.frame(group = as.factor(c(rep(0, times = 11), rep(1, times = 
                       person = c(11,13,12,6,13,10,6,15,9,15,7,12,8,11,7,7,7,6,10,10,7,10,8,8,5,11,8,10,9,12,9,10,10,9,7,4,5,7,11,6))
 levels(psychology$group) <- c("Year1", "Year2", "Year3")
 psychology
+
 ##############################################################################################################
 # Análise Exploratória e Descritiva dos dados
 ##############################################################################################################
@@ -146,9 +150,9 @@ ggpairs(psychology, columns = 2:6, aes(color = group, alpha = 0.6)) +
   theme_minimal() +
   labs(title = "Gráficos de Dispersão entre Variáveis de interesse por Grupo")
 
+
 #Explorando a existência de outliers na análise multivariada
-
-
+aq.plot(psychology[, 2:6])
 
 ##############################################################################################################
 # Pressupostos
@@ -157,6 +161,7 @@ ggpairs(psychology, columns = 2:6, aes(color = group, alpha = 0.6)) +
 by(psychology[,2:6], psychology$group, cov)
 matrizes.cov <- by(round(psychology[, 2:6], 2), psychology$group, function(x) round(cov(x), 2)) #deixando com 2 casas decimais
 matrizes.cov
+
 ##############Determinante da Covariance Matrix##########################################
 by(round(psychology[, 2:6], 2), psychology$group, function(x) round(det(cov(x)), 2))
 
