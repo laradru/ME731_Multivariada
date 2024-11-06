@@ -191,6 +191,8 @@ abline(0,1)
 
 
 
+
+
 psychology.g2 <- psychology %>% filter(group == "Year2") 
 psychology.g2 <-as.data.frame(cbind(psychology.g2$exper,psychology.g2$stats, psychology.g2$social, psychology.g2$develop, psychology.g2$person))
 media.psychology.g2 <- colMeans(psychology.g2)
@@ -229,6 +231,9 @@ QQ3 <-qchisq(Perc.3, dim(psychology.g3)[2])
 TabQQ3 <-as.data.frame(cbind(g3.mah, Perc.3, QQ3))
 plot(TabQQ3$QQ3 ~ TabQQ3$g3.mah, pch=16, xlab = "Distância de Mahalanobis ao quadrado", ylab = "Q")
 abline(0,1)
+
+
+
 
 
 
