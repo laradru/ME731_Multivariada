@@ -4,6 +4,7 @@
 install.packages("tidyverse")
 install.packages("knitr")
 install.packages("GGally")
+install.packages("biotools")
 
 ##############################################################################################################
 # Rodando os pacotes
@@ -11,6 +12,7 @@ install.packages("GGally")
 library(tidyverse)
 library(knitr)
 library(GGally)
+library(biotools)
 ##############################################################################################################
 # Importação dos dados 
 ##############################################################################################################
@@ -23,7 +25,7 @@ psychology <- data.frame(group = as.factor(c(rep(0, times = 11), rep(1, times = 
 levels(psychology$group) <- c("Year1", "Year2", "Year3")
 psychology
 ##############################################################################################################
-# Análise Exploratória dos dados
+# Análise Exploratória e Descritiva dos dados
 ##############################################################################################################
 #Medidas de resumo
 medidas.resumo <- psychology %>% select(c(exper, stats, social, develop, person, group)) %>% 
@@ -116,30 +118,126 @@ medidas.resumo.person
 psychology %>% ggplot(aes(x = group, y = exper)) + 
   geom_boxplot(show.legend = FALSE) +
   labs(x = "Grupo", y = "Psicologia Experimental") +
+  scale_x_discrete(labels = c("Year1" = "Estudantes 1ano", "Year2" = "Estudantes 2ano", "Year3" = "Estudantes 3ano")) +
   theme_bw()
 psychology %>% ggplot(aes(x = group, y = stats)) + 
   geom_boxplot(show.legend = FALSE) +
   labs(x = "Grupo", y = "Estatística em Psicologia") +
+  scale_x_discrete(labels = c("Year1" = "Estudantes 1ano", "Year2" = "Estudantes 2ano", "Year3" = "Estudantes 3ano")) +
   theme_bw()
 psychology %>% ggplot(aes(x = group, y = social)) + 
   geom_boxplot(show.legend = FALSE) +
   labs(x = "Grupo", y = "Psicologia Social") +
+  scale_x_discrete(labels = c("Year1" = "Estudantes 1ano", "Year2" = "Estudantes 2ano", "Year3" = "Estudantes 3ano")) +
   theme_bw()
 psychology %>% ggplot(aes(x = group, y = develop)) + 
   geom_boxplot(show.legend = FALSE) +
   labs(x = "Grupo", y = "Psicologia do Desenvolvimento") +
+  scale_x_discrete(labels = c("Year1" = "Estudantes 1ano", "Year2" = "Estudantes 2ano", "Year3" = "Estudantes 3ano")) +
   theme_bw()
 psychology %>% ggplot(aes(x = group, y = person)) + 
   geom_boxplot(show.legend = FALSE) +
   labs(x = "Grupo", y = "Personalidade") +
+  scale_x_discrete(labels = c("Year1" = "Estudantes 1ano", "Year2" = "Estudantes 2ano", "Year3" = "Estudantes 3ano")) +
   theme_bw()
-
-
 
 #Explorando a relação entre as variáveis respostas por grupo:
 ggpairs(psychology, columns = 2:6, aes(color = group, alpha = 0.6)) +
   theme_minimal() +
-  labs(title = "Gráficos de Dispersão entre Variáveis por Grupo")
+  labs(title = "Gráficos de Dispersão entre Variáveis de interesse por Grupo")
+
+#Explorando a existência de outliers na análise multivariada
+
+
+
+##############################################################################################################
+# Pressupostos
+##############################################################################################################
+##############Obtenção da Covariance Matrix##########################################
+by(psychology[,2:6], psychology$group, cov)
+matrizes.cov <- by(round(psychology[, 2:6], 2), psychology$group, function(x) round(cov(x), 2)) #deixando com 2 casas decimais
+matrizes.cov
+##############Determinante da Covariance Matrix##########################################
+by(round(psychology[, 2:6], 2), psychology$group, function(x) round(det(cov(x)), 2))
+
+##############Box's M-Test para igualdade das matrizes de variâncias e covariâncias##############################
+#H0:as matrizes são iguais
+#H1:as matrizes são diferentes
+#Nível de significância adotado: 5%
+result <- boxM(data = psychology[, 2:6], grouping = psychology$group)
+print(result)
+
+qchisq(p = 0.95, df = 30) # chiquadrado crítico
+
+
+##############Avaliação da normalidade multivariada##############################
+psychology.g1 <- psychology %>% filter(group == "Year1") 
+psychology.g1 <-as.data.frame(cbind(psychology.g1$exper,psychology.g1$stats, psychology.g1$social, psychology.g1$develop, psychology.g1$person))
+media.psychology.g1 <- colMeans(psychology.g1)
+var.psychology.g1 <- var(psychology.g1)
+
+g1.mah <- as.data.frame(mahalanobis(psychology.g1, media.psychology.g1, var.psychology.g1))
+names(g1.mah) <- c("Mahalabonis")
+g1.mah
+ordem.g1 <- order(g1.mah$Mahalabonis, decreasing = FALSE)
+g1.mah <- g1.mah[ordem.g1,]
+g1.mah
+n1 <- 11
+Perc.1 <- seq((1 - 0.5) / n1, (n1 - 0.5) / n1, length.out = n1)
+QQ1 <-qchisq(Perc.1, dim(psychology.g1)[2])
+TabQQ1 <-as.data.frame(cbind(g1.mah, Perc.1, QQ1))
+plot(TabQQ1$QQ1 ~ TabQQ1$g1.mah, pch=16, xlab = "Distância de Mahalanobis ao quadrado", ylab = "Q")
+abline(0,1)
+
+
+
+psychology.g2 <- psychology %>% filter(group == "Year2") 
+psychology.g2 <-as.data.frame(cbind(psychology.g2$exper,psychology.g2$stats, psychology.g2$social, psychology.g2$develop, psychology.g2$person))
+media.psychology.g2 <- colMeans(psychology.g2)
+var.psychology.g2 <- var(psychology.g2)
+
+g2.mah <- as.data.frame(mahalanobis(psychology.g2, media.psychology.g2, var.psychology.g2))
+names(g2.mah) <- c("Mahalabonis")
+g2.mah
+ordem.g2 <- order(g2.mah$Mahalabonis, decreasing = FALSE)
+g2.mah <- g2.mah[ordem.g2,]
+g2.mah
+n2 <- 16
+Perc.2 <- seq((1 - 0.5) / n2, (n2 - 0.5) / n2, length.out = n2)
+QQ2 <-qchisq(Perc.2, dim(psychology.g2)[2])
+TabQQ2 <-as.data.frame(cbind(g2.mah, Perc.2, QQ2))
+plot(TabQQ2$QQ2 ~ TabQQ2$g2.mah, pch=16, xlab = "Distância de Mahalanobis ao quadrado", ylab = "Q")
+abline(0,1)
+
+
+
+
+psychology.g3 <- psychology %>% filter(group == "Year3") 
+psychology.g3 <-as.data.frame(cbind(psychology.g3$exper,psychology.g3$stats, psychology.g3$social, psychology.g3$develop, psychology.g3$person))
+media.psychology.g3 <- colMeans(psychology.g3)
+var.psychology.g3 <- var(psychology.g3)
+
+g3.mah <- as.data.frame(mahalanobis(psychology.g3, media.psychology.g3, var.psychology.g3))
+names(g3.mah) <- c("Mahalabonis")
+g3.mah
+ordem.g3 <- order(g3.mah$Mahalabonis, decreasing = FALSE)
+g3.mah <- g3.mah[ordem.g3,]
+g3.mah
+n3 <- 13
+Perc.3 <- seq((1 - 0.5) / n3, (n3 - 0.5) / n3, length.out = n3)
+QQ3 <-qchisq(Perc.3, dim(psychology.g3)[2])
+TabQQ3 <-as.data.frame(cbind(g3.mah, Perc.3, QQ3))
+plot(TabQQ3$QQ3 ~ TabQQ3$g3.mah, pch=16, xlab = "Distância de Mahalanobis ao quadrado", ylab = "Q")
+abline(0,1)
+
+
+
+
+
+
+
+
+
 
 
 
@@ -167,9 +265,7 @@ media_RF <- mean(crime$RF)
 media<- as.vector(c(media_HD, media_F, media_R, media_RF))
 round(media,2)
 
-##############Covariance Matrix##########################################
-cov.crime<-cov(crime.matrix) 
-round(cov.crime, 2)
+
 
 #######Total and Generalized Variances###########################################
 #total:
@@ -180,9 +276,6 @@ det(cov.crime)
 #######Correlation Matrix#######################################################
 cor.crime<-cor(crime.matrix)
 round(cor.crime,2)
-
-
-
 
 
 
