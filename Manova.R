@@ -2,6 +2,7 @@
 # Instalação de pacotes
 ##############################################################################################################
 install.packages("tidyverse")
+install.packages("dplyr")
 install.packages("knitr")
 install.packages("GGally")
 install.packages("biotools")
@@ -15,6 +16,7 @@ library(knitr)
 library(GGally)
 library(biotools)
 library(mvoutlier)
+library(dplyr)
 
 ##############################################################################################################
 # Importação dos dados 
@@ -32,8 +34,7 @@ psychology
 # Análise Exploratória e Descritiva dos dados
 ##############################################################################################################
 #Medidas de resumo
-medidas.resumo <- psychology %>% select(c(exper, stats, social, develop, person, group)) %>% 
-  group_by(group) %>%
+medidas.resumo <- psychology %>% dplyr::select(exper, stats, social, develop, person, group) %>% group_by(group) %>%
   summarise(across(c(exper, stats, social, develop, person), 
             list(media = ~ mean(.x, na.rm = TRUE),
                  variancia = ~ var(.x, na.rm = TRUE),
@@ -237,8 +238,10 @@ TabQQ3 <-as.data.frame(cbind(g3.mah, Perc.3, QQ3))
 plot(TabQQ3$QQ3 ~ TabQQ3$g3.mah, pch=16, xlab = "Distância de Mahalanobis ao quadrado", ylab = "Q")
 abline(0,1)
 
-
-
+##############################################################################################################
+# MANOVA ROBUSTA
+##############################################################################################################
+# Reorganizando os dados
 
 
 
