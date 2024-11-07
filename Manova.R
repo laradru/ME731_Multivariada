@@ -7,7 +7,9 @@ install.packages("knitr")
 install.packages("GGally")
 install.packages("biotools")
 install.packages("mvoutlier")
-
+install.packages("reshape")
+install.packages("rrcov")
+install.packages("robustbase")
 ##############################################################################################################
 # Rodando os pacotes
 ##############################################################################################################
@@ -17,7 +19,10 @@ library(GGally)
 library(biotools)
 library(mvoutlier)
 library(dplyr)
-
+library(reshape)
+library(multcomp)
+library(rrcov)
+library(robustbase)
 ##############################################################################################################
 # Importação dos dados 
 ##############################################################################################################
@@ -242,121 +247,92 @@ abline(0,1)
 # MANOVA ROBUSTA
 ##############################################################################################################
 # Reorganizando os dados
+psychology$row <- rep(c(1:11, 1:16, 1:13))
+psychology.long <- psychology %>% pivot_longer(cols = 2:6, 
+                                               names_to = "variaveis", 
+                                               values_to = "scores")
+psychology.robusta <- cast(psychology.long, row ~ group + variaveis, value = "scores")
+psychology.robusta$row <- NULL
+
+# The cmanova()function in R (Wilcox, 2005):
+
+cmanova<-function(J,K,x,grp=c(1:JK),JK=J*K){
+  #
+  # Perform the Choi and Marden
+  # multivariate one-way rank-based ANOVA
+  # (Choi and Marden, JASA, 1997, 92, 1581-1590.
+  #
+  # x can be a matrix with columns corresponding to groups
+  # or it can have list mode.
+  #
+  # Have a J by K design with J independent levels and K dependent
+  # measures
+  #
+  #
+  x=drop_na(x)
+  if(is.matrix(x))x<-listm(x)
+  xx<-list()
+  nvec<-NA
+  jk<-0
+  for(j in 1:J){
+    for(k in 1:K){
+      jk<-jk+1
+      xx[[jk]]<-x[[grp[jk]]]
+      if(k==1)nvec[j]<-length(xx[[jk]])
+    }}
+  N<-sum(nvec)
+  RVALL<-matrix(0,nrow=N,K)
+  x<-xx
+  jk<-0
+  rmean<-matrix(NA,nrow=J,ncol=K)
+  for(j in 1:J){
+    RV<-matrix(0,nrow=nvec[j],ncol=K)
+    jk<-jk+1
+    temp1<-matrix(x[[jk]],ncol=1)
+    for(k in 2:K){
+      jk<-jk+1
+      temp1<-cbind(temp1,x[[jk]])
+    }
+    X<-temp1
+    if(j==1)XALL<-X
+    if(j>1)XALL<-rbind(XALL,X)
+    n<-nvec[j]
+    for(i in 1:n){
+      for (ii in 1:n){
+        temp3<-sqrt(sum((X[i,]-X[ii,])^2))
+        if(temp3 != 0)RV[i,]<-RV[i,]+(X[i,]-X[ii,])/temp3
+      }
+      RV[i,]<-RV[i,]/nvec[j]
+      if(j==1 && i==1)sighat<-RV[i,]%*%t(RV[i,])
+      if(j>1 || i>1)sighat<-sighat+RV[i,]%*%t(RV[i,])
+    }
+  }
+  # Assign ranks to pooled data and compute R bar for each group
+  for(i in 1:N){
+    for (ii in 1:N){
+      temp3<-sqrt(sum((XALL[i,]-XALL[ii,])^2))
+      if(temp3 != 0)RVALL[i,]<-RVALL[i,]+(XALL[i,]-XALL[ii,])/temp3
+    }
+    RVALL[i,]<-RVALL[i,]/N
+  }
+  bot<-1-nvec[1]
+  top<-0
+  for(j in 1:J){
+    bot<-bot+nvec[j]
+    top<-top+nvec[j]
+    flag<-c(bot:top)
+    rmean[j,]<-apply(RVALL[flag,],2,mean)
+  }
+  sighat<-sighat/(N-J)
+  shatinv<-solve(sighat)
+  KW<-0
+  for(j in 1:J){
+    KW<-KW+nvec[j]*t(rmean[j,])%*%shatinv%*%rmean[j,]
+  }
+  df<-K*(J-1)
+  sig.level<-1-pchisq(KW,df)
+  list(test.stat=KW[1,1],df=df,p.value=sig.level)
+}
+
+cmanova(3, 5, psychology.robusta)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#######Observation matrix######################################
-crime.matrix<-as.matrix(cbind(crime$HD, crime$F,crime$R, crime$RF))
-colnames(crime.matrix) <- c("HD", "F", "R", "RF")
-
-#######Vector of means######################################
-media_HD <- mean(crime$HD)
-media_F <- mean(crime$F)
-media_R <- mean(crime$R)
-media_RF <- mean(crime$RF)
-
-media<- as.vector(c(media_HD, media_F, media_R, media_RF))
-round(media,2)
-
-
-
-#######Total and Generalized Variances###########################################
-#total:
-sum(diag(cov.crime))
-#generalized:
-det(cov.crime)
-
-#######Correlation Matrix#######################################################
-cor.crime<-cor(crime.matrix)
-round(cor.crime,2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Matriz de covariâncias
-
-
-
-
-#######Plots#######################################################
-#Gráfico de calor
-library(corrplot)
-corrplot(cor.crime, method = "ellipse")
-
-#Faces de Chernoff (com data.frame - a ordem das variáveis importa: está relacionada as características da face)
-library(aplpack)
-crime1 <- crime[, 2:5]
-faces(crime1, labels = crime$Regiao)
-
-crime2 <- as.data.frame(cbind(crime$F, crime$RF, crime$HD, crime$R))
-colnames(crime2) <- c("F", "RF", "HD", "R")
-row.names(crime$Regiao)
-
-faces(crime2, labels = crime$Regiao)
-
-#Gráfico de radar
-stars(crime1, key.loc = c(9,6), flip.labels = FALSE, labels = crime$Regiao)
-
-
-
-
-
-
-
-#Os helicpteros de seda , independente da presenca de clipes, tiveram os tempos mais variados em relacao aos helicopteros de outros papeis:
-psychology %>% ggplot(aes(x = papel, y = tempo, fill = papel)) + 
-  geom_boxplot(show.legend = FALSE) +
-  facet_wrap(~ clips) +
-  labs(x = "Tipo de papel", y = "Tempo médio de queda (em segundos)") +
-  theme_bw()
-
-#Gráfico de dispersão:
-dados %>% ggplot(aes(x = papel, y = tempo, color = papel)) + 
-  geom_point(show.legend = FALSE) +
-  facet_wrap(~ clips) +
-  labs(x = "Tipo de papel", y = "Tempo médio de queda (em segundos)") +
-  theme_bw()
-
-# Gráfico de interação:
-medias <- dados %>% group_by(clips, papel) %>% summarise(media_tempo = mean(tempo))
-
-dados %>% ggplot(aes(x = papel, y = tempo)) +
-  geom_point() +
-  geom_line(data = medias, aes(x = papel, y = media_tempo, group = clips, color = clips)) +
-  labs(x = "Tipo de papel", y = "Tempo médio de queda (em segundos)", color = "") +
-  theme_bw()
