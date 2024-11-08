@@ -52,7 +52,8 @@ medidas.resumo <- psychology %>% dplyr::select(exper, stats, social, develop, pe
 medidas.resumo
 
 #ou
-medidas.resumo.expert <- psychology %>% select(c(exper, group)) %>% 
+
+medidas.resumo.expert <- psychology %>% dplyr::select(exper, group) %>% 
   group_by(group) %>%
   summarise(across(c(exper), 
                    list(n = ~ n(),
@@ -66,7 +67,7 @@ medidas.resumo.expert <- psychology %>% select(c(exper, group)) %>%
                    .names = "{.col}_{.fn}"))
 medidas.resumo.expert
 
-medidas.resumo.stats <- psychology %>% select(c(stats, group)) %>% 
+medidas.resumo.stats <- psychology %>% dplyr::select(stats, group) %>% 
   group_by(group) %>%
   summarise(across(c(stats), 
                    list(n = ~ n(),
@@ -80,7 +81,7 @@ medidas.resumo.stats <- psychology %>% select(c(stats, group)) %>%
                    .names = "{.col}_{.fn}"))
 medidas.resumo.stats
 
-medidas.resumo.social <- psychology %>% select(c(social, group)) %>% 
+medidas.resumo.social <- psychology %>% dplyr::select(social, group) %>% 
   group_by(group) %>%
   summarise(across(c(social), 
                    list(n = ~ n(),
@@ -94,7 +95,7 @@ medidas.resumo.social <- psychology %>% select(c(social, group)) %>%
                    .names = "{.col}_{.fn}"))
 medidas.resumo.social
 
-medidas.resumo.develop <- psychology %>% select(c(develop, group)) %>% 
+medidas.resumo.develop <- psychology %>% dplyr::select(develop, group) %>% 
   group_by(group) %>%
   summarise(across(c(develop), 
                    list(n = ~ n(),
@@ -108,7 +109,7 @@ medidas.resumo.develop <- psychology %>% select(c(develop, group)) %>%
                    .names = "{.col}_{.fn}"))
 medidas.resumo.develop
 
-medidas.resumo.person <- psychology %>% select(c(person, group)) %>% 
+medidas.resumo.person <- psychology %>% dplyr::select(person, group) %>% 
   group_by(group) %>%
   summarise(across(c(person), 
                    list(n = ~ n(),
