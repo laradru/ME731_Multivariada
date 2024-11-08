@@ -254,7 +254,10 @@ psychology.long <- psychology %>% pivot_longer(cols = 2:6,
 psychology.robusta <- cast(psychology.long, row ~ group + variaveis, value = "scores")
 psychology.robusta$row <- NULL
 
-# The cmanova()function in R (Wilcox, 2005):
+##################
+# The cmanova()function in R (Wilcox, 2005) Código disponível em: https://osf.io/spvzc:
+##################
+
 
 cmanova<-function(J,K,x,grp=c(1:JK),JK=J*K){
   #
@@ -336,3 +339,100 @@ cmanova<-function(J,K,x,grp=c(1:JK),JK=J*K){
 
 cmanova(3, 5, psychology.robusta)
 
+
+##################
+# Alternativa: The mulrank()function in R (Wilcox, 2005). Código disponível em: https://osf.io/spvzc:
+##################
+
+mulrank<-function(J,K,x,grp=c(1:p),p=J*K){
+  #
+  # Perform the Munzel and Brunner
+  # multivariate one-way rank-based ANOVA
+  # (Munzel and Brunner, Biometrical J., 2000, 42, 837--854
+  #
+  # x can be a matrix with columns corresponding to groups
+  #
+  # Have a J by K design with J independent levels and K dependent
+  # measures
+  #
+  # or it can have list mode.
+  #
+  newx=list()
+  GV=matrix(c(1:p),ncol=K,byrow=TRUE)
+  if(is.list(x)){
+    temp=NA
+    jk=0
+    for(j in 1:J){
+      temp=elimna(matl(x[GV[j,]]))
+      for(k in 1:K){
+        jk=jk+1
+        newx[[jk]]=temp[,k]
+      }}
+    x=NA
+    x=newx
+  }
+  if(is.matrix(x)){
+    x=elimna(x)
+    x<-listm(x)
+  }
+  xx<-list()
+  nvec<-NA
+  for(j in 1:p){
+    xx[[j]]<-x[[grp[j]]]
+    nvec[j]<-length(xx[[j]])
+  }
+  Nrow=nvec[GV[,1]]
+  v<-matrix(0,p,p)
+  Ja<-matrix(1,J,J)
+  Ia<-diag(1,J)
+  Pa<-Ia-Ja/J
+  Jb<-matrix(1,K,K)
+  Ib<-diag(1,K)
+  Pb<-Ib-Jb/K
+  cona<-kron(Pa,Ib)
+  xr<-list()
+  N<-0
+  jj=0
+  for(k in 1:K){
+    temp<-x[[k]]
+    jk<-k
+    for (j in 2:J){
+      jj=jj+1
+      jk<-jk+K
+      temp<-c(temp,x[[jk]])
+    }
+    N<-length(temp)
+    pr<-rank(temp)
+    xr[[k]]<-pr[1:nvec[k]] #Put ranks of pooled data for first
+    #                       variable in xr
+    top<-nvec[k]
+    jk<-k
+    bot<-1
+    for (j in 2:J){
+      jk<-jk+K
+      bot<-bot+nvec[jk]
+      top<-top+nvec[jk]
+      xr[[jk]]<-pr[bot:top] # Put midranks in xr
+    }}
+  phat<-NA
+  botk<-0
+  for(j in 1:J){
+    for(k in 1:K){
+      botk<-botk+1
+      phat[botk]<-(mean(xr[[botk]])-.5)/N
+    }}
+  klow<-1-K
+  kup<-0
+  for(j in 1:J){
+    klow<-klow+K
+    kup<-kup+K
+    sel<-c(klow:kup)
+    v[sel,sel]<-covmtrim(xr[klow:kup],tr=0)/N
+  }
+  qhat<-matrix(phat,J,K,byrow=TRUE)
+  test<-N*t(phat)%*%cona%*%phat/sum(diag(cona%*%v))
+  nu1<-sum(diag(cona%*%v))^2/sum(diag(cona%*%v%*%cona%*%v))
+  sig.level<-1-pf(test,nu1,1000000)
+  list(test.stat=test[1,1],nu1=nu1,p.value=sig.level,N=N,q.hat=qhat)
+}
+mulrank(3, 5, psychology.robusta)
